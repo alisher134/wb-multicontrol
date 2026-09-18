@@ -20,6 +20,12 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
   // Must be last: runs Prettier as an ESLint rule and disables conflicting rules
   eslintPluginPrettierRecommended,
 ])
