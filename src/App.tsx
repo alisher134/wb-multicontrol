@@ -1,7 +1,20 @@
+import { Route, Routes } from 'react-router'
+import { MainPage } from './pages/main-page/MainPage'
+import { routes } from './config/routes'
+import { LoginPage } from './pages/login-page/LoginPage'
+import { AuthLayout } from './components/layouts/AuthLayout'
+import { MainLayout } from './components/layouts/MainLayout'
+
 export default function App() {
   return (
-    <div className="flex min-h-svh items-center justify-center">
-      <h1 className="text-2xl font-semibold tracking-tight">Hello World</h1>
-    </div>
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route path={routes.main} element={<MainPage />} />
+      </Route>
+
+      <Route element={<AuthLayout />}>
+        <Route path={routes.login} element={<LoginPage />} />
+      </Route>
+    </Routes>
   )
 }
