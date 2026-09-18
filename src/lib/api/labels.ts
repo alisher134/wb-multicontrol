@@ -1,10 +1,16 @@
 import type {
+  AdminRole,
   DashboardPeriod,
   OrderStatus,
   SellerAccountStatus,
   StockFulfillmentType,
   StockLevel,
 } from './types'
+
+const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
+  LEAD_ADMIN: 'Главный админ',
+  ADMIN: 'Админ',
+}
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   new: 'Новый',
@@ -36,6 +42,10 @@ const STOCK_LEVEL_LABELS: Record<StockLevel, string> = {
   in_stock: 'В наличии',
   low: 'Мало',
   out_of_stock: 'Нет в наличии',
+}
+
+export function getAdminRoleLabel(role: AdminRole): string {
+  return ADMIN_ROLE_LABELS[role]
 }
 
 export function getOrderStatusLabel(status: OrderStatus): string {

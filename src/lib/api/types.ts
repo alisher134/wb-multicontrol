@@ -1,3 +1,30 @@
+export type AdminRole = 'LEAD_ADMIN' | 'ADMIN'
+
+export type AdminUser = {
+  id: string
+  username: string
+  name: string
+  role: AdminRole
+  createdAt: string
+}
+
+export type AdminUserRecord = AdminUser & {
+  password: string
+}
+
+export type CreateAdminPayload = {
+  username: string
+  name: string
+  password: string
+}
+
+export type UpdateAdminPayload = {
+  id: string
+  username: string
+  name: string
+  password?: string
+}
+
 export type SellerAccountStatus = 'active' | 'token_expired' | 'error'
 
 export type SellerAccount = {

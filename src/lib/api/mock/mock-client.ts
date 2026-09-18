@@ -1,4 +1,8 @@
+import { getMockSession, syncMockSessionProfile } from '@/lib/mock-auth'
+
 import type {
+  AdminUser,
+  CreateAdminPayload,
   CreateSellerPayload,
   DashboardDayPoint,
   DashboardFilters,
@@ -16,10 +20,17 @@ import type {
   SellerDashboardRow,
   StockItem,
   StocksFilters,
+  UpdateAdminPayload,
   UpdateSellerPayload,
   UpdateSellerTokenPayload,
 } from '../types'
 import { getStockLevel } from '../stock-level'
+import {
+  createAdminRecord,
+  deleteAdminRecord,
+  listAdminUsers,
+  updateAdminRecord,
+} from './admins-store'
 import { mapOrderToDetails } from './map-order-details'
 import { MOCK_ORDERS } from './mock-orders'
 import { MOCK_STOCKS } from './mock-stocks'
@@ -30,6 +41,19 @@ import {
   updateSellerRecord,
   updateSellerTokenRecord,
 } from './sellers-store'
+
+function requireSessionActor() {
+  const session = getMockSession()
+
+  if (session == null) {
+    throw new Error('Требуется авторизация')
+  }
+
+  return {
+    adminId: session.adminId,
+    role: session.role,
+  }
+}
 
 const MOCK_API_DELAY_MS = 400
 const MOCK_PAGE_DELAY_MS = 500
@@ -283,6 +307,38 @@ function filterStocks(filters: StocksFilters): StockItem[] {
 
     return matchesAccount && matchesFulfillment && matchesLevel
   })
+}
+
+export async function getAdmins(): Promise<AdminUser[]> {
+  await delay(MOCK_API_DELAY_MS)
+  return listAdminUsers()
+}
+
+export async function createAdmin(
+  payload: CreateAdminPayload,
+): Promise<AdminUser> {
+  await delay(MOCK_API_DELAY_MS)
+  return createAdminRecord(payload, requireSessionActor())
+}
+
+export async function updateAdmin(
+  payload: UpdateAdminPayload,
+): Promise<AdminUser> {
+  await delay(MOCK_API_DELAY_MS)
+
+  const actor = requireSessionActor()
+  const updated = updateAdminRecord(payload, actor)
+
+  if (actor.adminId === updated.id) {
+    syncMockSessionProfile(updated.username)
+  }
+
+  return updated
+}
+
+export async function deleteAdmin(adminId: string): Promise<void> {
+  await delay(MOCK_API_DELAY_MS)
+  deleteAdminRecord(adminId, requireSessionActor())
 }
 
 export async function getSellers(): Promise<SellerAccount[]> {

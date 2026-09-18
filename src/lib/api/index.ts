@@ -1,5 +1,10 @@
 export type {
+  AdminRole,
+  AdminUser,
+  AdminUserRecord,
+  CreateAdminPayload,
   CreateSellerPayload,
+  UpdateAdminPayload,
   DashboardDayPoint,
   DashboardFilters,
   DashboardPeriod,
@@ -27,17 +32,22 @@ export type {
 } from './types'
 
 export {
+  createAdmin,
   createSeller,
+  deleteAdmin,
   deleteSeller,
+  getAdmins,
   getDashboardStats,
   getOrderById,
   getOrders,
   getSellers,
   getStocks,
+  updateAdmin,
   updateSeller,
   updateSellerToken,
 } from './mock/mock-client'
 export {
+  getAdminRoleLabel,
   getDashboardPeriodLabel,
   getOrderStatusLabel,
   getSellerStatusLabel,

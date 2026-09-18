@@ -2,6 +2,7 @@ import {
   BoxesIcon,
   LayoutDashboardIcon,
   PackageIcon,
+  ShieldIcon,
   StoreIcon,
   type LucideIcon,
 } from 'lucide-react'
@@ -19,4 +20,5 @@ export const APP_NAV_ITEMS: AppNavItem[] = [
   { to: routes.orders, label: 'Заказы', icon: PackageIcon },
   { to: routes.stocks, label: 'Остатки', icon: BoxesIcon },
   { to: routes.sellers, label: 'ИП', icon: StoreIcon },
+  { to: routes.admins, label: 'Админы', icon: ShieldIcon },
 ]

@@ -5,5 +5,6 @@ export const routes = {
   orderDetailsPath: '/orders/:orderId',
   stocks: '/stocks',
   sellers: '/sellers',
+  admins: '/admins',
   login: '/login',
 }
