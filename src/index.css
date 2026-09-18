@@ -3,7 +3,7 @@
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
 
-@custom-variant dark (&:is(.dark *));
+/* @custom-variant dark (&:is(.dark *)); */
 
 :root {
   --card: #fafafa;
@@ -51,7 +51,7 @@
   --sidebar-primary-foreground: #fafafa;
 }
 
-.dark {
+/* .dark {
   --card: #1a1a1a;
   --ring: #e855c4;
   --input: #333333;
@@ -95,7 +95,7 @@
   --destructive-foreground: #111111;
   --sidebar-accent-foreground: #f0abdc;
   --sidebar-primary-foreground: #111111;
-}
+} */
 
 @theme inline {
   --color-card: var(--card);
@@ -219,10 +219,10 @@
     color-scheme: light;
   }
 
-  html.dark {
+  /* html.dark {
     color-scheme: dark;
     background-color: var(--background);
-  }
+  } */
 
   button:not(:disabled),
   [role='button']:not(:disabled) {
