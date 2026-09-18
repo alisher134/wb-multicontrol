@@ -1,8 +1,33 @@
 {
   "name": "wb-multicontrol",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
+  "description": "Мультиконтроль для управления аккаунтами и операциями Wildberries",
+  "author": {
+    "name": "alisher134",
+    "email": "alisherrakhmanov134@gmail.com"
+  },
+  "license": "MIT",
   "type": "module",
+  "homepage": "https://github.com/alisher134/wb-multicontrol#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alisher134/wb-multicontrol.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alisher134/wb-multicontrol/issues"
+  },
+  "keywords": [
+    "wildberries",
+    "wb",
+    "multicontrol",
+    "react",
+    "typescript",
+    "vite"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
