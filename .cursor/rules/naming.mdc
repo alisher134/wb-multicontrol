@@ -1,0 +1,118 @@
+---
+description: Naming conventions for files, types, props, handlers, and constants
+alwaysApply: true
+---
+
+# Naming
+
+## Files and folders
+
+- Files and folders: `kebab-case` (`order-details-page.tsx`, `filter-content/`).
+- Extra kind in the filename uses a hyphen: `returns-types.ts`, `login-form-schema.ts`, `orders-store.ts`. Do not use `name.kind.ts`.
+- Tool-required dotted suffixes stay: `.test.ts(x)`, `.module.scss`, `.d.ts`.
+- SCSS: `<component-name>.module.scss` next to the `.tsx` of the same name. Never `style.module.scss` or `page.module.scss`.
+- Two styled components in one directory → each gets its own folder.
+
+## Code identifiers
+
+- Components: `PascalCase` (`ExchangeDetailsHeader`).
+- Hooks: `useSomething` (`useExchangeDetails`, `useDebouncedSearchQuery`).
+- Booleans: `is` / `has` / `can` / `should` prefix (`isLoading`, `hasError`, `canCancel`).
+- Constants: `UPPER_SNAKE_CASE` (`SEARCH_DEBOUNCE_MS`, `DEFAULT_PAGE_SIZE`).
+- Types: `PascalCase` (`ExchangeDetails`, `CancelExchangePayload`).
+- Callback props: `onX` (`onClose`, `onConfirm`, `onFiltersChange`).
+- Local event handlers: `handleX` (`handleClose`, `handleConfirm`, `handleFiltersChange`).
+- Collections: plural nouns (`orders`, `exchangeItems`, `visibleFilters`).
+- Module public API: `index.ts` barrel. Import the folder/module barrel, not a file deep inside it.
+- Avoid abbreviations unless domain-standard (`KZ`, `DTO`, `API`).
+
+## Props and domain names
+
+- Use precise domain names instead of vague ones: `exchange`, `buyer`, `waybill` — not `data`, `item`, `value`, `temp`.
+- Query keys live in `query-keys.ts` and use a module prefix: `exchangeKeys.details(id)`.
+- Zustand stores: `<domain>-store.ts` with a named hook export (`useExchangeFiltersStore`).
+
+---
+
+## Examples
+
+### 1. File and folder names
+
+```
+# ❌ BAD
+src/modules/exchange/components/ExchangeDetailsHeader.tsx
+src/modules/exchange/components/exchangeDetails/style.module.scss
+src/modules/exchange/api/exchange.types.ts
+
+# ✅ GOOD
+src/modules/exchange/components/exchange-details/exchange-details-header.tsx
+src/modules/exchange/components/exchange-details/exchange-details-header.module.scss
+src/modules/exchange/model/exchange-types.ts
+```
+
+### 2. Component and hook names
+
+```tsx
+// ❌ BAD
+function exchangeHeader() { /* ... */ }
+function getData() { /* ... */ }
+function Exchange_details() { /* ... */ }
+
+// ✅ GOOD
+function ExchangeDetailsHeader() { /* ... */ }
+function useExchangeDetails(exchangeId: string) { /* ... */ }
+function mapExchangeToTimelineSteps(exchange: ExchangeDetails) { /* ... */ }
+```
+
+### 3. Boolean and handler names
+
+```tsx
+// ❌ BAD
+type Props = {
+  loading: boolean;
+  disabled: boolean;
+  click: () => void;
+};
+
+function ExchangeTabs({ loading, click }: Props) {
+  const submit = () => click();
+}
+
+// ✅ GOOD
+type Props = {
+  isLoading: boolean;
+  isDisabled: boolean;
+  onTabChange: (tab: ExchangeTab) => void;
+};
+
+function ExchangeTabs({ isLoading, onTabChange }: Props) {
+  const handleTabChange = (tab: ExchangeTab) => onTabChange(tab);
+}
+```
+
+### 4. Types and constants
+
+```typescript
+// ❌ BAD
+type data = { id: string; status: string };
+const debounce = 300;
+const ExchangeStatus = 'pending';
+
+// ✅ GOOD
+type ExchangeListItem = { id: string; status: ExchangeStatus };
+const SEARCH_DEBOUNCE_MS = 300;
+const EXCHANGE_TAB_TO_SHIP = 'to-ship' as const;
+```
+
+### 5. Import paths and barrels
+
+```typescript
+// ❌ BAD
+import { ExchangeTimelineStep } from '@/modules/exchange/components/exchange-details/exchange-timeline-step';
+import { useOrders } from '@/shared/api/order';
+
+// ✅ GOOD
+import { ExchangeDetailsPage } from '@/modules/exchange';
+import { useExchangeDetails } from '@/modules/exchange/api/hooks'; // only inside the same module
+import { Pagination } from '@/shared/ui';
+```

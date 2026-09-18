@@ -1,0 +1,230 @@
+---
+description: Readable top-down React components with strict size limits
+alwaysApply: true
+---
+
+# Readable components
+
+## Structure
+
+- Write explicit, predictable code that can be understood by reading it from top to bottom.
+- Keep component files under 150 lines when possible; 200 lines is the strict maximum, including imports and local functions.
+- When a file approaches 150 lines, split it by responsibility before adding more logic.
+- Order inside a component: hooks and derived values → handlers → early returns → JSX.
+- Extract forms, tables, modals, filters, and repeated list items into focused components.
+- Extract complex state, effects, data transformations, and requests into clearly named hooks or module-local helpers.
+- Give every component and hook one clear responsibility and a small, explicit API.
+- Use precise domain names instead of vague names such as `data`, `item`, `value`, `handle`, or `temp`.
+- Prefer early returns and named values over nested conditions, nested ternaries, and complex expressions in JSX.
+- Name event handlers `handleX`; do not place multi-step business logic directly in JSX.
+- Look for a suitable existing component, hook, or helper before creating a new one. Do not duplicate it under another name.
+- Do not create speculative abstractions. Extract shared code only for a clear responsibility or a real second consumer.
+- Keep domain components in their owning module; move only domain-free primitives to `shared`.
+
+## UI states
+
+Every screen or data block must handle visible states explicitly:
+
+1. **Loading** — skeleton or spinner consistent with neighboring screens.
+2. **Empty** — domain-specific empty state, not a blank page.
+3. **Error** — user-visible message; retry when appropriate.
+4. **Success** — main content.
+
+Do not branch with `if` / `&&` / ternaries in page or widget JSX for these
+states. Use declarative primitives from `shared/ui` (`AsyncWrapper`,
+`LoaderGate`, `ErrorGate`, `Show`, `EmptyState`, `ErrorAlert`,
+`ErrorPageElement`) — see `declarative-ui.mdc`.
+
+## JSX rules
+
+- No hardcoded user-visible strings — use `useTranslation()` and existing locale keys.
+- No inline anonymous async handlers with business logic in JSX.
+- Prefer named booleans (`isCancelDisabled`) over compound conditions in markup.
+- Map lists with stable keys (`order.id`), never array index for mutable lists.
+- Chakra props for layout; SCSS module for custom styling — do not mix a new UI library.
+
+---
+
+## Examples
+
+### 1. Large screen owns everything
+
+```tsx
+// ❌ BAD
+function ExchangeDetailsPage() {
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const { data, isLoading, refetch } = useExchangeDetails(id);
+  const cancelExchange = useCancelExchange();
+  const visibleSteps = data?.timeline.filter(/* ... */).sort(/* ... */) ?? [];
+
+  const handleCancel = async () => {
+    await cancelExchange.mutateAsync(id);
+    refetch();
+  };
+
+  return (
+    <Box>
+      {/* header, buyer card, product card, timeline, modals inline */}
+    </Box>
+  );
+}
+
+// ✅ GOOD
+function ExchangeDetailsPage() {
+  const exchangeDetails = useExchangeDetailsPage(id);
+
+  return (
+    <AsyncWrapper
+      isLoading={exchangeDetails.isLoading}
+      isError={exchangeDetails.isError}
+      data={exchangeDetails.exchange}
+      loaderSlot={<ExchangeDetailsSkeleton />}
+      errorSlot={<ExchangeDetailsError onRetry={exchangeDetails.refetch} />}
+    >
+      {(exchange) => (
+        <ExchangeDetailsContent
+          exchange={exchange}
+          onCancel={exchangeDetails.handleCancel}
+        />
+      )}
+    </AsyncWrapper>
+  );
+}
+```
+
+### 2. Business logic hidden in JSX
+
+```tsx
+// ❌ BAD
+function ExchangeTabs({ activeTab, exchanges }: Props) {
+  return (
+    <Tabs index={activeTab === 'to-ship' ? 0 : activeTab === 'completed' ? 1 : 2}>
+      <Tab>{exchanges.filter((e) => e.status === 'to-ship').length} to ship</Tab>
+    </Tabs>
+  );
+}
+
+// ✅ GOOD
+function ExchangeTabs({ activeTab, tabCounts }: Props) {
+  const activeIndex = getExchangeTabIndex(activeTab);
+
+  return (
+    <Tabs index={activeIndex}>
+      <Tab>{tabCounts.toShip}</Tab>
+      <Tab>{tabCounts.completed}</Tab>
+      <Tab>{tabCounts.cancelled}</Tab>
+    </Tabs>
+  );
+}
+```
+
+### 3. Missing loading / empty / error states
+
+```tsx
+// ❌ BAD
+function ExchangeList({ filters }: Props) {
+  const { data } = useExchangeList(filters);
+  return (
+    <Stack>
+      {data?.items.map((exchange) => (
+        <ExchangeListItem key={exchange.id} exchange={exchange} />
+      ))}
+    </Stack>
+  );
+}
+
+// ✅ GOOD
+function ExchangeList({ filters }: Props) {
+  const { data, isLoading, isError, error, refetch } = useExchangeList(filters);
+
+  return (
+    <AsyncWrapper
+      isLoading={isLoading}
+      isError={isError}
+      data={data}
+      loaderSlot={<ExchangeListSkeleton />}
+      errorSlot={
+        <ErrorAlert
+          errorMessage={error?.message ?? t('exchange.list.error')}
+        />
+      }
+    >
+      {(list) => (
+        <Show
+          when={list.items.length > 0}
+          fallback={<EmptyState title={t('exchange.list.empty')} />}
+        >
+          <Stack>
+            {list.items.map((exchange) => (
+              <ExchangeListItem key={exchange.id} exchange={exchange} />
+            ))}
+          </Stack>
+        </Show>
+      )}
+    </AsyncWrapper>
+  );
+}
+```
+
+### 4. Dense nested ternary in small component
+
+```tsx
+// ❌ BAD
+function ExchangeStatusBadge({ exchange }: Props) {
+  return (
+    <Badge
+      colorScheme={
+        exchange.isCancelled ? 'red' : exchange.isCompleted
+          ? 'green'
+          : exchange.isToShip ? 'blue' : 'gray'
+      }
+    >
+      {exchange.isCancelled ? 'cancelled' : exchange.isCompleted ? 'completed' : 'pending'}
+    </Badge>
+  );
+}
+
+// ✅ GOOD
+function ExchangeStatusBadge({ exchange }: Props) {
+  const { t } = useTranslation();
+  const appearance = getExchangeStatusAppearance(exchange);
+
+  return (
+    <Badge colorScheme={appearance.colorScheme}>
+      {t(appearance.labelKey)}
+    </Badge>
+  );
+}
+```
+
+### 5. Inline async handler with side effects in JSX
+
+```tsx
+// ❌ BAD
+<Button
+  onClick={async () => {
+    setIsSubmitting(true);
+    await rejectExchange.mutateAsync({ id, reason });
+    onClose();
+    toast.success('Rejected');
+  }}
+>
+  Reject
+</Button>
+
+// ✅ GOOD
+function RejectExchangeModal({ exchangeId, onClose }: Props) {
+  const rejectExchange = useRejectExchange();
+
+  const handleReject = async (reason: RejectReason) => {
+    await rejectExchange.mutateAsync({ id: exchangeId, reason });
+    onClose();
+  };
+
+  return (
+    <Button isLoading={rejectExchange.isLoading} onClick={() => handleReject(selectedReason)}>
+      {t('exchange.reject.confirm')}
+    </Button>
+  );
+}
+```

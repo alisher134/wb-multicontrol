@@ -1,0 +1,104 @@
+---
+description: Conventional Commits, staging discipline, no Cursor attribution
+alwaysApply: true
+---
+
+# Git
+
+## Commit format
+
+Use Conventional Commits:
+
+```
+type(optional-scope): short summary in imperative mood
+```
+
+Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+- Subject: imperative, lowercase, no period at the end.
+- Keep the subject under ~72 characters.
+- Body only when the why is not obvious from the subject.
+- Scope should match the module or area: `exchange`, `orders`, `auth`, `shared`, `ci`.
+- **Commit only when explicitly asked** by the user.
+- Never add `Co-authored-by: Cursor`, `Made with Cursor`, or any AI attribution trailer.
+- Use only the user's configured git `user.name` / `user.email`.
+
+## Staging discipline
+
+- Stage only files related to the task — do not `git add .` unless the user asked.
+- Do not commit unrelated local changes the user was working on.
+- Do not amend or force-push unless explicitly requested.
+- Before committing, verify the staged diff matches the requested change.
+
+## When not to commit
+
+- Exploratory changes, WIP, or partial implementations.
+- Format-only changes mixed into unrelated feature work without user approval.
+- Failed lint/build/test state unless the user explicitly wants a WIP commit.
+
+---
+
+## Examples
+
+### 1. Commit message format
+
+```
+# ❌ BAD
+fixed stuff
+Update exchange page
+WIP: cancel modal
+feat: Added cancel exchange modal.
+
+# ✅ GOOD
+fix(exchange): handle empty buyer photos on details page
+feat(exchange): add cancel exchange confirmation modal
+refactor(exchange): extract exchange timeline step component
+chore: bump vite to 5.4.2
+```
+
+### 2. Scope matches module
+
+```
+# ❌ BAD — vague scope for a module-specific change
+fix: exchange cancel bug
+
+# ✅ GOOD
+fix(exchange): prevent double submit on cancel modal
+```
+
+### 3. Committing without user request
+
+```
+# ❌ BAD — user said "implement the modal" but did not ask to commit
+git add .
+git commit -m "feat(exchange): add cancel modal"
+
+# ✅ GOOD — implement, verify, report; wait for explicit commit request
+Implemented cancel modal. Lint and build passed. Say if you want me to commit.
+```
+
+### 4. Staging unrelated files
+
+```
+# ❌ BAD — stages user's unrelated WIP
+git add src/modules/exchange/components/cancel-exchange-modal.tsx
+git add src/modules/orders/components/orders-table.tsx  # unrelated local edit
+
+# ✅ GOOD
+git add src/modules/exchange/components/exchange-details/cancel-exchange-modal.tsx
+git add src/shared/i18n/locales/ru/exchange.json
+git add src/shared/i18n/locales/kz/exchange.json
+git add src/shared/i18n/locales/ch/exchange.json
+```
+
+### 5. AI attribution in commit message
+
+```
+# ❌ BAD
+feat(exchange): add reject modal
+
+Co-authored-by: Cursor <cursoragent@cursor.com>
+
+# ✅ GOOD
+feat(exchange): add reject exchange modal
+```

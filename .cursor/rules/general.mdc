@@ -1,0 +1,147 @@
+---
+description: Core coding standards — scope, delivery, verification
+alwaysApply: true
+---
+
+# General
+
+## Principles
+
+- Prefer readability over clever code.
+- Avoid overengineering; keep solutions simple (KISS).
+- Do not duplicate logic — extract only when a second consumer exists (DRY).
+- Use early returns to keep control flow flat.
+- Keep each file focused on one responsibility.
+- Match neighboring code: same form lib (RHF / Formik), same UI kit (Chakra / SCSS).
+- Delivered code must not contain TODOs, placeholders, or incomplete implementations.
+- During work, report any temporary WIP; remove it before delivery.
+- Ask clarifying questions only when requirements are ambiguous.
+- Do not expand scope (no extra refactors, docs, or comments unless asked).
+
+## Workflow
+
+1. Read neighboring files before writing new code — match patterns already in the module.
+2. Search for an existing component, hook, or helper before creating a new one.
+3. Implement the smallest change that satisfies the request.
+4. Before finishing: run `npm run lint`, `npm run format`, relevant tests, and `npm run build`.
+5. Run `npm run typecheck` when types changed; report pre-existing failures honestly.
+6. Commit only when explicitly asked.
+
+## Scope boundaries
+
+- Fix only what the task requires. Do not rename unrelated files, reformat untouched code, or refactor adjacent modules.
+- Do not add README, docs, or comments the user did not ask for.
+- Do not introduce new libraries when the stack already covers the need (Chakra, react-query v3, Zustand, i18next).
+- When editing legacy paths, prefer moving code toward `src/modules/<name>/` — but only for files you already touch.
+
+## Verification checklist
+
+| Change type | Required checks |
+|---|---|
+| Any code change | `lint`, `format`, `build` |
+| Behavior change | focused or full tests |
+| Types / API shapes | `typecheck` |
+| UI-visible change | exercise loading, empty, error, mobile when possible |
+
+---
+
+## Examples
+
+### 1. Scope creep
+
+```tsx
+// ❌ BAD — user asked to fix a button label; agent refactors the whole page
+function ExchangeDetailsPage() {
+  const exchange = useExchangeDetails(); // new hook extracted from unrelated logic
+  const timeline = useMemo(() => buildTimeline(exchange), [exchange]); // drive-by refactor
+  // ...
+}
+
+// ✅ GOOD — only the requested label fix
+function ExchangeDetailsHeader({ exchangeId }: Props) {
+  const { t } = useTranslation();
+  return <Heading>{t('exchange.details.title', { id: exchangeId })}</Heading>;
+}
+```
+
+### 2. Incomplete delivery
+
+```tsx
+// ❌ BAD
+function CancelExchangeModal({ onConfirm }: Props) {
+  const handleConfirm = () => {
+    // TODO: wire API call
+    onConfirm();
+  };
+  return <Button onClick={handleConfirm}>Cancel</Button>;
+}
+
+// ✅ GOOD — finished behavior with error handling
+function CancelExchangeModal({ exchangeId, onClose }: Props) {
+  const { t } = useTranslation();
+  const cancelExchange = useCancelExchange();
+
+  const handleConfirm = async () => {
+    await cancelExchange.mutateAsync(exchangeId);
+    onClose();
+  };
+
+  return (
+    <Button isLoading={cancelExchange.isLoading} onClick={handleConfirm}>
+      {t('exchange.cancel.confirm')}
+    </Button>
+  );
+}
+```
+
+### 3. Reinventing existing utilities
+
+```tsx
+// ❌ BAD — local debounce when shared hook exists
+function ExchangeListFilters() {
+  const [search, setSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => fetchExchanges(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+}
+
+// ✅ GOOD
+import { useDebouncedSearchQuery } from '@/shared/hooks/use-debounce';
+
+function ExchangeListFilters() {
+  const debouncedSearch = useDebouncedSearchQuery(search, resetPage);
+}
+```
+
+### 4. Ignoring neighboring patterns
+
+```tsx
+// ❌ BAD — introduces Formik in a module that uses React Hook Form
+import { Formik, Form } from 'formik';
+
+function RejectExchangeForm() {
+  return <Formik initialValues={{ reason: '' }} onSubmit={handleSubmit}>...</Formik>;
+}
+
+// ✅ GOOD — matches the exchange module's existing form approach
+import { useForm } from 'react-hook-form';
+
+function RejectExchangeForm() {
+  const form = useForm<RejectExchangeFormValues>({ defaultValues: { reason: '' } });
+}
+```
+
+### 5. Skipping verification
+
+```
+# ❌ BAD — agent reports "done" without running checks
+Changed exchange-details-header.tsx. Ready for review.
+
+# ✅ GOOD — agent runs and reports checks
+Changed exchange-details-header.tsx.
+- npm run lint — passed
+- npm run format — applied
+- npm run build — passed
+- npx vitest run src/modules/exchange — passed
+```
