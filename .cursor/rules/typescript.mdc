@@ -1,0 +1,123 @@
+---
+description: TypeScript standards — strict mode, boundaries, narrowing, no new any
+alwaysApply: true
+---
+
+# TypeScript
+
+`tsconfig.json` has `strict: true`. Still guard empty photo, missing price, etc. on the backend boundary. Do not turn `strict` off as a drive-by change.
+
+## Core rules
+
+- Do not add new `any`. Existing `any` on the backend boundary is tolerated; do not globally rewrite it.
+- Prefer `unknown` + narrowing over `any`.
+- Avoid `@ts-ignore` / `@ts-expect-error` unless unavoidable and commented why.
+- Prefer `type` for data shapes; `interface` when you need `extends` or declaration merging.
+- Domain types live in the module (`model/` or `api/types.ts`), not inside a UI component.
+- Prettier: single quotes (including JSX), semicolons, `printWidth: 80`.
+
+## Backend boundary
+
+- Parse/normalize API responses in the module `api/` layer before they reach components.
+- Model optional backend fields explicitly: `photo: string | null`, `price: Price | null`.
+- Use discriminated unions for async UI state when it clarifies rendering.
+
+## Functions and generics
+
+- Prefer explicit return types on exported module helpers and API mappers.
+- Do not use non-null assertion (`!`) to silence missing backend data — handle `null`/`undefined`.
+- Avoid widening literals accidentally; use `as const` for fixed sets of statuses/tabs.
+- Reuse existing domain types; do not duplicate the same shape under a new name.
+
+---
+
+## Examples
+
+### 1. Nullable backend fields
+
+```typescript
+// ❌ BAD — assumes backend always sends a photo
+function ExchangeProductCard({ product }: { product: { photo: string } }) {
+  return <Image src={product.photo} alt="" />;
+}
+
+// ✅ GOOD
+type ExchangeProduct = {
+  id: string;
+  title: string;
+  photo: string | null;
+};
+
+function ExchangeProductCard({ product }: { product: ExchangeProduct }) {
+  if (product.photo == null) return <ProductPhotoPlaceholder />;
+  return <Image src={product.photo} alt={product.title} />;
+}
+```
+
+### 2. unknown instead of any
+
+```typescript
+// ❌ BAD
+function mapExchangeError(error: any) {
+  return error.response.data.message;
+}
+
+// ✅ GOOD
+function mapExchangeError(error: unknown): string {
+  if (!isAxiosError(error)) return 'unknown_error';
+  const message = error.response?.data?.message;
+  return typeof message === 'string' ? message : 'unknown_error';
+}
+```
+
+### 3. Discriminated async state
+
+```typescript
+// ❌ BAD — multiple booleans can contradict each other
+type ExchangeDetailsState = {
+  isLoading: boolean;
+  isError: boolean;
+  exchange: ExchangeDetails | null;
+};
+
+// ✅ GOOD
+type ExchangeDetailsState =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'success'; exchange: ExchangeDetails };
+```
+
+### 4. Domain types outside components
+
+```typescript
+// ❌ BAD — type declared inside component file
+function CancelExchangeModal() {
+  type Payload = { reason: string; comment?: string };
+}
+
+// ✅ GOOD — src/modules/exchange/model/exchange-types.ts
+export type CancelExchangePayload = {
+  reason: ExchangeCancelReason;
+  comment?: string;
+};
+```
+
+### 5. Avoid unsafe assertions
+
+```typescript
+// ❌ BAD
+const status = response.data.status as ExchangeStatus;
+const price = product.price!.amount;
+
+// ✅ GOOD
+function isExchangeStatus(value: string): value is ExchangeStatus {
+  return EXCHANGE_STATUSES.includes(value as ExchangeStatus);
+}
+
+const status = isExchangeStatus(response.data.status)
+  ? response.data.status
+  : 'unknown';
+
+const formattedPrice =
+  product.price == null ? '' : String(product.price.amount);
+```
