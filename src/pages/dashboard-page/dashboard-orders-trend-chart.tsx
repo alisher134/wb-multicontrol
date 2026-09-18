@@ -15,8 +15,8 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import type { DashboardStats } from '@/lib/api'
-import { formatCurrencyRub } from '@/lib/format'
+import { getDashboardPeriodLabel, type DashboardStats } from '@/lib/api'
+import { formatCompactNumber, formatCurrencyRub } from '@/lib/format'
 
 type DashboardOrdersTrendChartProps = {
   stats: DashboardStats
@@ -27,6 +27,10 @@ const chartConfig = {
     label: 'Заказы',
     color: 'var(--chart-1)',
   },
+  salesCount: {
+    label: 'Продажи',
+    color: 'var(--chart-3)',
+  },
   revenue: {
     label: 'Выручка',
     color: 'var(--chart-4)',
@@ -36,16 +40,20 @@ const chartConfig = {
 export function DashboardOrdersTrendChart({
   stats,
 }: DashboardOrdersTrendChartProps) {
+  const periodLabel = getDashboardPeriodLabel(stats.period)
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Динамика за 7 дней</CardTitle>
-        <CardDescription>Заказы и выручка по всем кабинетам</CardDescription>
+        <CardTitle className="text-sm">Динамика · {periodLabel}</CardTitle>
+        <CardDescription>
+          Заказы, продажи и выручка по выбранному срезу
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-64 w-full"
+          className="aspect-auto h-56 w-full"
         >
           <AreaChart
             accessibilityLayer
@@ -58,6 +66,8 @@ export function DashboardOrdersTrendChart({
               tickLine={false}
               axisLine={false}
               tickMargin={8}
+              interval="preserveStartEnd"
+              minTickGap={24}
             />
             <YAxis
               yAxisId="orders"
@@ -72,23 +82,16 @@ export function DashboardOrdersTrendChart({
               tickLine={false}
               axisLine={false}
               width={56}
-              tickFormatter={(value: number) =>
-                new Intl.NumberFormat('ru-RU', {
-                  notation: 'compact',
-                  maximumFractionDigits: 1,
-                }).format(value)
-              }
+              tickFormatter={(value: number) => formatCompactNumber(value)}
             />
             <ChartTooltip
               content={
                 <ChartTooltipContent
                   formatter={(value, name) => {
-                    const label =
-                      name === 'revenue'
-                        ? chartConfig.revenue.label
-                        : chartConfig.ordersCount.label
+                    const key = String(name) as keyof typeof chartConfig
+                    const label = chartConfig[key]?.label ?? String(name)
                     const formattedValue =
-                      name === 'revenue'
+                      key === 'revenue'
                         ? formatCurrencyRub(Number(value))
                         : String(value)
 
@@ -115,11 +118,20 @@ export function DashboardOrdersTrendChart({
               strokeWidth={2}
             />
             <Area
+              yAxisId="orders"
+              dataKey="salesCount"
+              type="monotone"
+              fill="var(--color-salesCount)"
+              fillOpacity={0.12}
+              stroke="var(--color-salesCount)"
+              strokeWidth={2}
+            />
+            <Area
               yAxisId="revenue"
               dataKey="revenue"
               type="monotone"
               fill="var(--color-revenue)"
-              fillOpacity={0.15}
+              fillOpacity={0.1}
               stroke="var(--color-revenue)"
               strokeWidth={2}
             />

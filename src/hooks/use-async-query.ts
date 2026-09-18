@@ -5,20 +5,32 @@ type AsyncQueryState<T> = {
   isLoading: boolean
   isError: boolean
   errorMessage: string | undefined
+  refetch: () => void
+}
+
+type UseAsyncQueryOptions = {
+  enabled?: boolean
 }
 
 export function useAsyncQuery<T>(
   fetcher: () => Promise<T>,
   deps: unknown[] = [],
+  options: UseAsyncQueryOptions = {},
 ): AsyncQueryState<T> {
-  const [state, setState] = useState<AsyncQueryState<T>>({
-    data: undefined,
-    isLoading: true,
+  const isEnabled = options.enabled ?? true
+  const [reloadKey, setReloadKey] = useState(0)
+  const [state, setState] = useState({
+    data: undefined as T | undefined,
+    isLoading: isEnabled,
     isError: false,
-    errorMessage: undefined,
+    errorMessage: undefined as string | undefined,
   })
 
   useEffect(() => {
+    if (!isEnabled) {
+      return
+    }
+
     let isCancelled = false
 
     const load = async () => {
@@ -71,7 +83,15 @@ export function useAsyncQuery<T>(
       isCancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- deps passed by caller
-  }, deps)
+  }, [...deps, isEnabled, reloadKey])
 
-  return state
+  const refetch = () => {
+    setReloadKey((currentKey) => currentKey + 1)
+  }
+
+  return {
+    ...state,
+    isLoading: isEnabled ? state.isLoading : false,
+    refetch,
+  }
 }

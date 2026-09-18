@@ -1,20 +1,47 @@
 export type {
+  CreateSellerPayload,
   DashboardDayPoint,
+  DashboardFilters,
+  DashboardPeriod,
   DashboardStats,
   DashboardStatusPoint,
+  DashboardStocksSummary,
   Order,
   OrderDetails,
+  OrderDetailsItem,
+  OrderItem,
   OrderStatus,
   OrdersFilters,
+  PaginatedResult,
+  PaginationParams,
   SellerAccount,
+  SellerAccountRecord,
   SellerAccountStatus,
   SellerDashboardRow,
+  StockFulfillmentType,
+  StockItem,
+  StockLevel,
+  StocksFilters,
+  UpdateSellerPayload,
+  UpdateSellerTokenPayload,
 } from './types'
 
 export {
+  createSeller,
+  deleteSeller,
   getDashboardStats,
   getOrderById,
   getOrders,
   getSellers,
+  getStocks,
+  updateSeller,
+  updateSellerToken,
 } from './mock/mock-client'
-export { getOrderStatusLabel, getSellerStatusLabel } from './labels'
+export {
+  getDashboardPeriodLabel,
+  getOrderStatusLabel,
+  getSellerStatusLabel,
+  getStockFulfillmentLabel,
+  getStockLevelLabel,
+} from './labels'
+export { getStockLevel, LOW_STOCK_THRESHOLD } from './stock-level'

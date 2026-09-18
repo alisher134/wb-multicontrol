@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router'
 
 import { AppForm } from '@/components/ui/app-form'
 import { Button } from '@/components/ui/button'
-import { ErrorGate } from '@/components/ui/error-gate'
+import { ErrorAlert } from '@/components/ui/error-alert'
 import { InputField } from '@/components/ui/input-field'
 import { LoaderGate } from '@/components/ui/loader-gate'
 import { PasswordField } from '@/components/ui/password-field'
+import { Show } from '@/components/ui/show'
 import { Spinner } from '@/components/ui/spinner'
 import { routes } from '@/config/routes'
 import { useZodForm } from '@/hooks/use-zod-form'
@@ -49,7 +50,9 @@ export function LoginForm() {
         Вход
       </h1>
 
-      <ErrorGate isError={authError != null} errorMessage={authError ?? ''} />
+      <Show when={authError != null} data={authError}>
+        {(errorMessage) => <ErrorAlert errorMessage={errorMessage} />}
+      </Show>
 
       <AppForm
         form={form}

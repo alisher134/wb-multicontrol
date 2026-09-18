@@ -1,10 +1,18 @@
-import { getOrders, type OrdersFilters } from '@/lib/api'
+import { useCallback } from 'react'
 
-import { useAsyncQuery } from './use-async-query'
+import { getOrders, type OrdersFilters, type PaginationParams } from '@/lib/api'
+
+import { useInfiniteQuery } from './use-infinite-query'
 
 export function useOrders(filters: OrdersFilters) {
-  return useAsyncQuery(
-    () => getOrders(filters),
-    [filters.accountId, filters.status],
+  const accountId = filters.accountId
+  const status = filters.status
+
+  const fetcher = useCallback(
+    (pagination: PaginationParams) =>
+      getOrders({ accountId, status }, pagination),
+    [accountId, status],
   )
+
+  return useInfiniteQuery(fetcher, [accountId, status])
 }

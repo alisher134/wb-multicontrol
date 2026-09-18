@@ -1,11 +1,12 @@
 import { ArrowLeftIcon } from 'lucide-react'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 
 import { PageShell } from '@/components/page-shell'
 import { AsyncWrapper } from '@/components/ui/async-wrapper'
 import { Button } from '@/components/ui/button'
 import { CenteredSpinner } from '@/components/ui/centered-spinner'
-import { ErrorAlert } from '@/components/ui/error-alert'
+import { ErrorPageElement } from '@/components/ui/error-page-element'
+import { Show } from '@/components/ui/show'
 import { routes } from '@/config/routes'
 import { useOrderDetails } from '@/hooks/use-order-details'
 import { useSellers } from '@/hooks/use-sellers'
@@ -13,11 +14,13 @@ import { useSellers } from '@/hooks/use-sellers'
 import { OrderDetailsContent } from './order-details-content'
 
 export function OrderDetailsPage() {
+  const navigate = useNavigate()
   const { orderId } = useParams<{ orderId: string }>()
   const resolvedOrderId = orderId ?? ''
+  const isInvalidOrderId = resolvedOrderId.length === 0
 
   const sellersQuery = useSellers()
-  const orderQuery = useOrderDetails(resolvedOrderId)
+  const orderQuery = useOrderDetails(resolvedOrderId, !isInvalidOrderId)
 
   const isPageLoading = sellersQuery.isLoading || orderQuery.isLoading
   const isPageError = sellersQuery.isError || orderQuery.isError
@@ -27,6 +30,19 @@ export function OrderDetailsPage() {
     orderQuery.data != null && sellersQuery.data != null
       ? { order: orderQuery.data, sellers: sellersQuery.data }
       : undefined
+
+  const handleRetry = () => {
+    orderQuery.refetch()
+    sellersQuery.refetch()
+  }
+
+  const handleGoHome = () => {
+    void navigate(routes.main)
+  }
+
+  const handleGoToOrders = () => {
+    void navigate(routes.orders)
+  }
 
   return (
     <PageShell
@@ -39,29 +55,40 @@ export function OrderDetailsPage() {
         </Link>
       </Button>
 
-      <AsyncWrapper
-        isLoading={isPageLoading}
-        isError={isPageError || resolvedOrderId.length === 0}
-        data={pageData}
-        loaderSlot={<CenteredSpinner />}
-        errorSlot={
-          <ErrorAlert
-            errorMessage={
-              resolvedOrderId.length === 0
-                ? 'Некорректный идентификатор заказа'
-                : (pageErrorMessage ?? 'Не удалось загрузить заказ')
-            }
+      <Show
+        when={!isInvalidOrderId}
+        fallback={
+          <ErrorPageElement
+            title="Некорректный идентификатор заказа"
+            description="Проверьте ссылку или вернитесь к списку заказов"
+            onRetry={handleGoToOrders}
+            onGoHome={handleGoHome}
           />
         }
       >
-        {(data) => {
-          const seller = data.sellers.find(
-            (item) => item.id === data.order.accountId,
-          )
+        <AsyncWrapper
+          isLoading={isPageLoading}
+          isError={isPageError}
+          data={pageData}
+          loaderSlot={<CenteredSpinner />}
+          errorSlot={
+            <ErrorPageElement
+              title="Не удалось загрузить заказ"
+              description={pageErrorMessage}
+              onRetry={handleRetry}
+              onGoHome={handleGoHome}
+            />
+          }
+        >
+          {(data) => {
+            const seller = data.sellers.find(
+              (item) => item.id === data.order.accountId,
+            )
 
-          return <OrderDetailsContent order={data.order} seller={seller} />
-        }}
-      </AsyncWrapper>
+            return <OrderDetailsContent order={data.order} seller={seller} />
+          }}
+        </AsyncWrapper>
+      </Show>
     </PageShell>
   )
 }

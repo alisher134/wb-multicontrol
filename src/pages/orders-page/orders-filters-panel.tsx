@@ -21,7 +21,11 @@ const ORDER_STATUSES: OrderStatus[] = [
   'return',
 ]
 
-type OrdersFiltersProps = {
+function isOrderStatus(value: string): value is OrderStatus {
+  return ORDER_STATUSES.includes(value as OrderStatus)
+}
+
+type OrdersFiltersPanelProps = {
   sellers: SellerAccount[]
   filters: OrdersFilters
   onFiltersChange: (filters: OrdersFilters) => void
@@ -31,44 +35,58 @@ export function OrdersFiltersPanel({
   sellers,
   filters,
   onFiltersChange,
-}: OrdersFiltersProps) {
-  const handleAccountChange = (value: string) => {
+}: OrdersFiltersPanelProps) {
+  const handleAccountChange = (value: string | null) => {
+    if (value == null) {
+      return
+    }
+
     onFiltersChange({
       ...filters,
       accountId: value === ALL_ACCOUNT_VALUE ? 'all' : value,
     })
   }
 
-  const handleStatusChange = (value: string) => {
+  const handleStatusChange = (value: string | null) => {
+    if (value == null) {
+      return
+    }
+
     onFiltersChange({
       ...filters,
-      status: value === ALL_STATUS_VALUE ? 'all' : (value as OrderStatus),
+      status: isOrderStatus(value) ? value : 'all',
     })
   }
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-      <div className="flex min-w-[200px] flex-col gap-2">
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[200px]">
         <Label htmlFor="orders-account-filter">ИП</Label>
         <Select value={filters.accountId} onValueChange={handleAccountChange}>
-          <SelectTrigger id="orders-account-filter" className="w-full min-w-48">
+          <SelectTrigger
+            id="orders-account-filter"
+            className="w-full sm:min-w-48"
+          >
             <SelectValue placeholder="Все ИП" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL_ACCOUNT_VALUE}>Все ИП</SelectItem>
             {sellers.map((seller) => (
               <SelectItem key={seller.id} value={seller.id}>
-                {seller.shortName} — {seller.name}
+                {seller.shortName} - {seller.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <div className="flex min-w-[200px] flex-col gap-2">
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[200px]">
         <Label htmlFor="orders-status-filter">Статус</Label>
         <Select value={filters.status} onValueChange={handleStatusChange}>
-          <SelectTrigger id="orders-status-filter" className="w-full min-w-48">
+          <SelectTrigger
+            id="orders-status-filter"
+            className="w-full sm:min-w-48"
+          >
             <SelectValue placeholder="Все статусы" />
           </SelectTrigger>
           <SelectContent>

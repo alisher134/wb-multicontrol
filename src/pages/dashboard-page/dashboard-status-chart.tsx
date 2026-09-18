@@ -15,7 +15,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { getOrderStatusLabel, type DashboardStats } from '@/lib/api'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Show } from '@/components/ui/show'
+import {
+  getDashboardPeriodLabel,
+  getOrderStatusLabel,
+  type DashboardStats,
+} from '@/lib/api'
 
 type DashboardStatusChartProps = {
   stats: DashboardStats
@@ -52,42 +58,51 @@ export function DashboardStatusChart({ stats }: DashboardStatusChartProps) {
     ),
   } satisfies ChartConfig
 
+  const periodLabel = getDashboardPeriodLabel(stats.period)
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Статусы заказов</CardTitle>
-        <CardDescription>Распределение заказов за сегодня</CardDescription>
+        <CardTitle className="text-sm">Статусы заказов</CardTitle>
+        <CardDescription>
+          Распределение за период · {periodLabel}
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square max-h-64 w-full"
+        <Show
+          when={chartData.length > 0}
+          fallback={<EmptyState title="Нет заказов за выбранный период" />}
         >
-          <PieChart>
-            <ChartTooltip
-              content={<ChartTooltipContent nameKey="status" hideLabel />}
-            />
-            <Pie
-              data={chartData}
-              dataKey="count"
-              nameKey="status"
-              innerRadius={48}
-              strokeWidth={2}
-            >
-              {chartData.map((point) => (
-                <Cell key={point.status} fill={point.fill} />
-              ))}
-            </Pie>
-            <ChartLegend
-              content={
-                <ChartLegendContent
-                  nameKey="status"
-                  className="flex-wrap gap-2"
-                />
-              }
-            />
-          </PieChart>
-        </ChartContainer>
+          <ChartContainer
+            config={chartConfig}
+            className="mx-auto aspect-square max-h-56 w-full"
+          >
+            <PieChart>
+              <ChartTooltip
+                content={<ChartTooltipContent nameKey="status" hideLabel />}
+              />
+              <Pie
+                data={chartData}
+                dataKey="count"
+                nameKey="status"
+                innerRadius={48}
+                strokeWidth={2}
+              >
+                {chartData.map((point) => (
+                  <Cell key={point.status} fill={point.fill} />
+                ))}
+              </Pie>
+              <ChartLegend
+                content={
+                  <ChartLegendContent
+                    nameKey="status"
+                    className="flex-wrap gap-2"
+                  />
+                }
+              />
+            </PieChart>
+          </ChartContainer>
+        </Show>
       </CardContent>
     </Card>
   )

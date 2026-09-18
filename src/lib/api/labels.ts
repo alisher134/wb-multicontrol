@@ -1,4 +1,10 @@
-import type { OrderStatus, SellerAccountStatus } from './types'
+import type {
+  DashboardPeriod,
+  OrderStatus,
+  SellerAccountStatus,
+  StockFulfillmentType,
+  StockLevel,
+} from './types'
 
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   new: 'Новый',
@@ -9,16 +15,47 @@ const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   return: 'Возврат',
 }
 
+const DASHBOARD_PERIOD_LABELS: Record<DashboardPeriod, string> = {
+  today: 'Сегодня',
+  '7d': '7 дней',
+  '30d': '30 дней',
+}
+
 const SELLER_STATUS_LABELS: Record<SellerAccountStatus, string> = {
   active: 'Активен',
   token_expired: 'Токен истёк',
   error: 'Ошибка',
 }
 
+const STOCK_FULFILLMENT_LABELS: Record<StockFulfillmentType, string> = {
+  fbs: 'Склад продавца',
+  fbo: 'Склад WB',
+}
+
+const STOCK_LEVEL_LABELS: Record<StockLevel, string> = {
+  in_stock: 'В наличии',
+  low: 'Мало',
+  out_of_stock: 'Нет в наличии',
+}
+
 export function getOrderStatusLabel(status: OrderStatus): string {
   return ORDER_STATUS_LABELS[status]
 }
 
+export function getDashboardPeriodLabel(period: DashboardPeriod): string {
+  return DASHBOARD_PERIOD_LABELS[period]
+}
+
 export function getSellerStatusLabel(status: SellerAccountStatus): string {
   return SELLER_STATUS_LABELS[status]
+}
+
+export function getStockFulfillmentLabel(
+  fulfillmentType: StockFulfillmentType,
+): string {
+  return STOCK_FULFILLMENT_LABELS[fulfillmentType]
+}
+
+export function getStockLevelLabel(stockLevel: StockLevel): string {
+  return STOCK_LEVEL_LABELS[stockLevel]
 }

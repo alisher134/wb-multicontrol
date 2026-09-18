@@ -13,8 +13,10 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import type { DashboardStats } from '@/lib/api'
-import { formatCurrencyRub } from '@/lib/format'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Show } from '@/components/ui/show'
+import { getDashboardPeriodLabel, type DashboardStats } from '@/lib/api'
+import { formatCompactNumber, formatCurrencyRub } from '@/lib/format'
 
 type DashboardSellersRevenueChartProps = {
   stats: DashboardStats
@@ -25,6 +27,10 @@ const chartConfig = {
     label: 'Выручка',
     color: 'var(--chart-2)',
   },
+  ordersCount: {
+    label: 'Заказы',
+    color: 'var(--chart-1)',
+  },
 } satisfies ChartConfig
 
 export function DashboardSellersRevenueChart({
@@ -33,65 +39,92 @@ export function DashboardSellersRevenueChart({
   const chartData = stats.bySeller.map((row) => ({
     shortName: row.shortName,
     revenue: row.revenue,
+    ordersCount: row.ordersCount,
   }))
+
+  const periodLabel = getDashboardPeriodLabel(stats.period)
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Выручка по ИП</CardTitle>
-        <CardDescription>Заказы за сегодня без отменённых</CardDescription>
+        <CardTitle className="text-sm">Сравнение ИП</CardTitle>
+        <CardDescription>Выручка и заказы · {periodLabel}</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer
-          config={chartConfig}
-          className="aspect-auto h-64 w-full"
+        <Show
+          when={chartData.length > 0}
+          fallback={<EmptyState title="Нет данных по ИП" />}
         >
-          <BarChart
-            accessibilityLayer
-            data={chartData}
-            margin={{ left: 8, right: 8, top: 8 }}
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-56 w-full"
           >
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="shortName"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              width={56}
-              tickFormatter={(value: number) =>
-                new Intl.NumberFormat('ru-RU', {
-                  notation: 'compact',
-                  maximumFractionDigits: 1,
-                }).format(value)
-              }
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  formatter={(value) => (
-                    <div className="flex flex-1 items-center justify-between gap-8 leading-none">
-                      <span className="text-muted-foreground">
-                        {chartConfig.revenue.label}
-                      </span>
-                      <span className="font-mono font-medium text-foreground tabular-nums">
-                        {formatCurrencyRub(Number(value))}
-                      </span>
-                    </div>
-                  )}
-                />
-              }
-            />
-            <Bar
-              dataKey="revenue"
-              fill="var(--color-revenue)"
-              radius={[6, 6, 0, 0]}
-            />
-          </BarChart>
-        </ChartContainer>
+            <BarChart
+              accessibilityLayer
+              data={chartData}
+              margin={{ left: 8, right: 8, top: 8 }}
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="shortName"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+              />
+              <YAxis
+                yAxisId="revenue"
+                tickLine={false}
+                axisLine={false}
+                width={56}
+                tickFormatter={(value: number) => formatCompactNumber(value)}
+              />
+              <YAxis
+                yAxisId="orders"
+                orientation="right"
+                tickLine={false}
+                axisLine={false}
+                width={36}
+                allowDecimals={false}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, name) => {
+                      const isRevenue = name === 'revenue'
+                      const label = isRevenue
+                        ? chartConfig.revenue.label
+                        : chartConfig.ordersCount.label
+                      const formattedValue = isRevenue
+                        ? formatCurrencyRub(Number(value))
+                        : String(value)
+
+                      return (
+                        <div className="flex flex-1 items-center justify-between gap-8 leading-none">
+                          <span className="text-muted-foreground">{label}</span>
+                          <span className="font-mono font-medium text-foreground tabular-nums">
+                            {formattedValue}
+                          </span>
+                        </div>
+                      )
+                    }}
+                  />
+                }
+              />
+              <Bar
+                yAxisId="revenue"
+                dataKey="revenue"
+                fill="var(--color-revenue)"
+                radius={[6, 6, 0, 0]}
+              />
+              <Bar
+                yAxisId="orders"
+                dataKey="ordersCount"
+                fill="var(--color-ordersCount)"
+                radius={[6, 6, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
+        </Show>
       </CardContent>
     </Card>
   )

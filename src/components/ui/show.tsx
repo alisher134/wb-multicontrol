@@ -8,12 +8,16 @@ export function Show<Data>({
 }: {
   data?: Data
   when: boolean
-  children: ReactNode | ((data: Data, when: boolean) => ReactNode)
+  children: ReactNode | ((data: NonNullable<Data>, when: boolean) => ReactNode)
   fallback?: ReactNode
 }) {
-  if (!when) return fallback
+  if (!when) {
+    return fallback
+  }
 
-  return typeof children === 'function'
-    ? children(data as Data, when)
-    : children
+  if (typeof children === 'function') {
+    return children(data as NonNullable<Data>, when)
+  }
+
+  return children
 }

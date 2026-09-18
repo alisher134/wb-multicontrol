@@ -1,16 +1,16 @@
-'use client'
-
 import { useId, useState } from 'react'
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
 
-import { Field, FieldError, FieldLabel } from '../ui/field'
+import type { FormUIProps } from '@/types/form'
+
+import { Field, FieldError, FieldLabel } from './field'
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from '../ui/input-group'
-import type { FormUIProps } from '../../types/form'
+} from './input-group'
+import { Show } from './show'
 
 export function PasswordField({
   label,
@@ -20,37 +20,47 @@ export function PasswordField({
 }: FormUIProps<'input'>) {
   const id = useId()
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const isInvalid = error != null
+  const passwordInputType = isPasswordVisible ? 'text' : 'password'
 
   const handleToggleVisibility = () => {
     setIsPasswordVisible((prev) => !prev)
   }
 
   return (
-    <Field data-invalid={error ? true : undefined}>
-      {label && (
-        <FieldLabel htmlFor={id} className="font-normal text-muted-foreground">
-          {label}
-        </FieldLabel>
-      )}
+    <Field data-invalid={isInvalid ? true : undefined}>
+      <Show when={label != null} data={label}>
+        {(labelText) => (
+          <FieldLabel
+            htmlFor={id}
+            className="font-normal text-muted-foreground"
+          >
+            {labelText}
+          </FieldLabel>
+        )}
+      </Show>
       <InputGroup className={className}>
         <InputGroupInput
           autoComplete="off"
           id={id}
           {...props}
-          type={isPasswordVisible ? 'text' : 'password'}
-          aria-invalid={error ? true : undefined}
+          type={passwordInputType}
+          aria-invalid={isInvalid ? true : undefined}
         />
         <InputGroupAddon align="inline-end">
           <InputGroupButton size="icon-xs" onClick={handleToggleVisibility}>
-            {isPasswordVisible ? (
+            <Show
+              when={isPasswordVisible}
+              fallback={<EyeIcon className="size-3" aria-hidden />}
+            >
               <EyeOffIcon className="size-3" aria-hidden />
-            ) : (
-              <EyeIcon className="size-3" aria-hidden />
-            )}
+            </Show>
           </InputGroupButton>
         </InputGroupAddon>
       </InputGroup>
-      {error && <FieldError>{error}</FieldError>}
+      <Show when={isInvalid} data={error}>
+        {(errorMessage) => <FieldError>{errorMessage}</FieldError>}
+      </Show>
     </Field>
   )
 }

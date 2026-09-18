@@ -7,6 +7,7 @@ export const MOCK_SELLERS: SellerAccount[] = [
     shortName: 'ИП-1',
     status: 'active',
     lastSyncedAt: '2026-03-18T08:12:00.000Z',
+    hasToken: true,
   },
   {
     id: 'seller-2',
@@ -14,6 +15,7 @@ export const MOCK_SELLERS: SellerAccount[] = [
     shortName: 'ИП-2',
     status: 'active',
     lastSyncedAt: '2026-03-18T08:05:00.000Z',
+    hasToken: true,
   },
   {
     id: 'seller-3',
@@ -21,6 +23,7 @@ export const MOCK_SELLERS: SellerAccount[] = [
     shortName: 'ИП-3',
     status: 'token_expired',
     lastSyncedAt: '2026-03-15T14:30:00.000Z',
+    hasToken: true,
   },
   {
     id: 'seller-4',
@@ -28,6 +31,7 @@ export const MOCK_SELLERS: SellerAccount[] = [
     shortName: 'ИП-4',
     status: 'active',
     lastSyncedAt: '2026-03-18T07:58:00.000Z',
+    hasToken: true,
   },
   {
     id: 'seller-5',
@@ -35,5 +39,6 @@ export const MOCK_SELLERS: SellerAccount[] = [
     shortName: 'ИП-5',
     status: 'error',
     lastSyncedAt: '2026-03-17T19:20:00.000Z',
+    hasToken: true,
   },
 ]

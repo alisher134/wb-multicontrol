@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react'
 
+import { Show } from './show'
 import { Field, FieldError, FieldHeader } from './field'
 import { Input } from './input'
 import type { FormUIProps } from '../../types/form'
@@ -15,17 +16,20 @@ export function InputField({
   ...props
 }: InputFieldProps) {
   const id = useId()
+  const isInvalid = error != null
 
   return (
-    <Field data-invalid={error ? true : undefined}>
+    <Field data-invalid={isInvalid ? true : undefined}>
       <FieldHeader htmlFor={id} label={label} action={action} />
       <Input
         autoComplete="off"
         id={id}
         {...props}
-        aria-invalid={error ? true : undefined}
+        aria-invalid={isInvalid ? true : undefined}
       />
-      {error && <FieldError>{error}</FieldError>}
+      <Show when={isInvalid} data={error}>
+        {(errorMessage) => <FieldError>{errorMessage}</FieldError>}
+      </Show>
     </Field>
   )
 }
